@@ -4,6 +4,7 @@ import { useGetKpisQuery } from '../../state/api'
 
 const Row1 = () => {
     const {data} = useGetKpisQuery();
+    console.log("data:", data) // This will log the data from the API call 
   return (
     <>
     <DashboardBox gridArea="a" ></DashboardBox>
