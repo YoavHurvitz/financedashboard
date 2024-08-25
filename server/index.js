@@ -5,6 +5,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import morgan from "morgan";
+import path from "path";
+import { fileURLToPath } from "url";
 import kpiRoutes from "./routes/kpi.js";
 import productRoutes from "./routes/product.js";
 import transactionRoutes from "./routes/transaction.js";
@@ -29,6 +31,16 @@ app.use("/kpi", kpiRoutes);
 app.use("/product", productRoutes);
 app.use("/transaction", transactionRoutes);
 
+/* SERVE STATIC FILES */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, "../client/dist")));
+
+/* CATCH-ALL ROUTE */
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+});
+
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;
 mongoose
@@ -42,9 +54,8 @@ mongoose
 
     /* ADD DATA ONE TIME ONLY OR AS NEEDED */
     // await mongoose.connection.db.dropDatabase();
-   // KPI.insertMany(kpis);
+    // KPI.insertMany(kpis);
     // Product.insertMany(products);
     // Transaction.insertMany(transactions);
   })
   .catch((error) => console.log(`${error} did not connect`));
-
