@@ -20,6 +20,16 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(helmet());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", process.env.CLIENT_URL || "*"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  })
+);
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
 app.use(bodyParser.json());
@@ -43,6 +53,9 @@ app.get("*", (req, res) => {
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;
+
+console.log("Attempting to connect to MongoDB...");
+
 mongoose
   .connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
@@ -50,12 +63,19 @@ mongoose
     dbName: 'FinanceProject',
   })
   .then(async () => {
+    console.log("Successfully connected to MongoDB");
     app.listen(PORT, () => console.log(`Server Port: ${PORT}`));
-
-    /* ADD DATA ONE TIME ONLY OR AS NEEDED */
-    // await mongoose.connection.db.dropDatabase();
-    // KPI.insertMany(kpis);
-    // Product.insertMany(products);
-    // Transaction.insertMany(transactions);
   })
-  .catch((error) => console.log(`${error} did not connect`));
+  .catch((error) => {
+    console.error("Failed to connect to MongoDB");
+    console.error("Error details:", error);
+  });
+
+// Add a route to check MongoDB connection
+app.get("/api/check-db", (req, res) => {
+  if (mongoose.connection.readyState === 1) {
+    res.json({ status: "connected" });
+  } else {
+    res.status(500).json({ status: "disconnected" });
+  }
+});
